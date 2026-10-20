@@ -1,0 +1,118 @@
+
+Table customers {
+  customer_id bigint [pk, increment]
+  first_name varchar(100) [not null]
+  last_name varchar(100) [not null]
+  email varchar(255) [unique, not null]
+  phone varchar(20) [unique, not null]
+  customer_type varchar(20) [not null, note: 'INDIVIDUAL or MERCHANT']
+  status varchar(20) [not null, default: 'ACTIVE', note: 'ACTIVE, SUSPENDED, CLOSED']
+  created_at timestamptz [not null, default: `now()`]
+}
+
+Table kyc_records {
+  kyc_id bigint [pk, increment]
+  customer_id bigint [not null]
+  id_type varchar(30) [not null, note: 'NIN, BVN, PASSPORT, DRIVERS_LICENCE']
+  id_number varchar(50) [not null]
+  verification_status varchar(20) [not null, default: 'PENDING', note: 'PENDING, VERIFIED, REJECTED']
+  submitted_at timestamptz [not null, default: `now()`]
+  decision_at timestamptz [note: 'NULL while PENDING; required after VERIFIED or REJECTED']
+}
+
+Table accounts {
+  account_id bigint [pk, increment]
+  customer_id bigint [not null]
+  account_number char(10) [unique, not null, note: '10 numeric digits']
+  currency char(3) [not null, default: 'NGN', note: 'NGN only in this design']
+  balance numeric(19,4) [not null, default: 0, note: 'CHECK balance >= 0; cached ledger balance']
+  status varchar(20) [not null, default: 'ACTIVE', note: 'ACTIVE, FROZEN, CLOSED']
+  opened_at timestamptz [not null, default: `now()`]
+}
+
+Table beneficiaries {
+  beneficiary_id bigint [pk, increment]
+  customer_id bigint [not null]
+  bank_name varchar(100) [not null]
+  account_number char(10) [not null, note: '10 numeric digits']
+  account_name varchar(150) [not null]
+
+  indexes {
+    (customer_id, bank_name, account_number) [unique]
+  }
+}
+
+Table cards {
+  card_id bigint [pk, increment]
+  account_id bigint [not null]
+  last_four char(4) [not null, note: 'Four numeric digits only']
+  card_type varchar(20) [not null, note: 'DEBIT or VIRTUAL']
+  expiry_date date [not null]
+  status varchar(20) [not null, default: 'ACTIVE', note: 'ACTIVE, BLOCKED, EXPIRED']
+}
+
+Table transactions {
+  transaction_id bigint [pk, increment]
+  idempotency_key varchar(64) [unique, not null]
+  txn_type varchar(20) [not null, note: 'DEPOSIT, WITHDRAWAL, TRANSFER, BILL_PAYMENT, REVERSAL']
+  status varchar(20) [not null, default: 'PENDING', note: 'PENDING, COMPLETED, FAILED, REVERSED']
+  amount numeric(19,4) [not null, note: 'CHECK amount > 0']
+  reference varchar(100)
+  reversal_of bigint [note: 'References the original transaction for a reversal']
+  initiated_at timestamptz [not null, default: `now()`]
+  completed_at timestamptz
+}
+
+Table ledger_entries {
+  entry_id bigint [pk, increment]
+  transaction_id bigint [not null]
+  account_id bigint [not null]
+  direction varchar(6) [not null, note: 'DEBIT or CREDIT']
+  amount numeric(19,4) [not null, note: 'CHECK amount > 0']
+  balance_after numeric(19,4) [not null, note: 'CHECK balance_after >= 0']
+  created_at timestamptz [not null, default: `now()`]
+
+  indexes {
+    (transaction_id, account_id, direction) [unique]
+  }
+}
+
+Table fraud_flags {
+  flag_id bigint [pk, increment]
+  transaction_id bigint [not null]
+  reason varchar(200) [not null]
+  risk_score smallint [not null, note: 'CHECK risk_score BETWEEN 0 AND 100']
+  status varchar(20) [not null, default: 'OPEN', note: 'OPEN, UNDER_REVIEW, CLEARED, CONFIRMED']
+  flagged_at timestamptz [not null, default: `now()`]
+}
+
+// ============================================================
+// Relationships
+// Each line reads: many side > one side
+// ============================================================
+
+// One customer can have multiple KYC submissions.
+Ref: kyc_records.customer_id > customers.customer_id
+
+// One customer can own multiple accounts.
+Ref: accounts.customer_id > customers.customer_id
+
+// One customer can save multiple beneficiaries.
+Ref: beneficiaries.customer_id > customers.customer_id
+
+// One account can have multiple cards.
+Ref: cards.account_id > accounts.account_id
+
+// One transaction can contain multiple ledger entries.
+Ref: ledger_entries.transaction_id > transactions.transaction_id
+
+// One account can appear in multiple ledger entries.
+Ref: ledger_entries.account_id > accounts.account_id
+
+// One transaction can have multiple fraud flags.
+Ref: fraud_flags.transaction_id > transactions.transaction_id
+
+// A reversal is a transaction that points at the original transaction.
+Ref: transactions.reversal_of > transactions.transaction_id
+
+
