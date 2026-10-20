@@ -1,1 +1,1 @@
-CREATE DATABASE cedarpay_db;
+CREATE DATABASE CedarPay_db;
