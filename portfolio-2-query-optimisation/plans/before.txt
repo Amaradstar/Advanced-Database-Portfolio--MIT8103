@@ -1,0 +1,212 @@
+=== q01_account_statement ===
+                                                                         QUERY PLAN                                                                          
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=823.86..823.98 rows=50 width=55) (actual time=4.535..4.546 rows=50.00 loops=1)
+   Buffers: shared hit=291
+   InitPlan 1
+     ->  Index Scan using accounts_account_number_key on accounts  (cost=0.28..8.30 rows=1 width=8) (actual time=0.546..0.547 rows=1.00 loops=1)
+           Index Cond: (account_number = '2200001001'::bpchar)
+           Index Searches: 1
+           Buffers: shared hit=3
+   ->  Sort  (cost=815.56..815.73 rows=68 width=55) (actual time=4.534..4.538 rows=50.00 loops=1)
+         Sort Key: l.created_at DESC
+         Sort Method: quicksort  Memory: 32kB
+         Buffers: shared hit=291
+         ->  Nested Loop  (cost=5.37..813.49 rows=68 width=55) (actual time=1.200..4.175 rows=57.00 loops=1)
+               Buffers: shared hit=291
+               ->  Bitmap Heap Scan on ledger_entries l  (cost=4.95..251.74 rows=68 width=36) (actual time=1.162..2.348 rows=57.00 loops=1)
+                     Recheck Cond: (account_id = (InitPlan 1).col1)
+                     Heap Blocks: exact=57
+                     Buffers: shared hit=63
+                     ->  Bitmap Index Scan on idx_ledger_entries_account_id  (cost=0.00..4.93 rows=68 width=0) (actual time=0.961..0.961 rows=57.00 loops=1)
+                           Index Cond: (account_id = (InitPlan 1).col1)
+                           Index Searches: 1
+                           Buffers: shared hit=6
+               ->  Index Scan using transactions_pkey on transactions t  (cost=0.42..8.26 rows=1 width=35) (actual time=0.031..0.031 rows=1.00 loops=57)
+                     Index Cond: (transaction_id = l.transaction_id)
+                     Index Searches: 57
+                     Buffers: shared hit=228
+ Planning:
+   Buffers: shared hit=16
+ Planning Time: 5.535 ms
+ Execution Time: 6.134 ms
+(29 rows)
+
+=== q02_daily_transfer_totals ===
+                                                                            QUERY PLAN                                                                            
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=6494.04..8607.02 rows=15205 width=48) (actual time=39.495..42.854 rows=29.00 loops=1)
+   Group Key: (date_trunc('day'::text, initiated_at))
+   Buffers: shared hit=3222
+   ->  Gather Merge  (cost=6494.04..8264.91 rows=15205 width=14) (actual time=38.374..40.233 rows=15417.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=3222
+         ->  Sort  (cost=5494.02..5509.85 rows=6335 width=14) (actual time=25.256..25.486 rows=5139.00 loops=3)
+               Sort Key: (date_trunc('day'::text, initiated_at))
+               Sort Method: quicksort  Memory: 401kB
+               Buffers: shared hit=3222
+               Worker 0:  Sort Method: quicksort  Memory: 331kB
+               Worker 1:  Sort Method: quicksort  Memory: 327kB
+               ->  Parallel Seq Scan on transactions  (cost=0.00..5093.99 rows=6335 width=14) (actual time=0.669..24.163 rows=5139.00 loops=3)
+                     Filter: (((txn_type)::text = 'TRANSFER'::text) AND ((status)::text = 'COMPLETED'::text) AND (initiated_at >= (now() - '30 days'::interval)))
+                     Rows Removed by Filter: 63560
+                     Buffers: shared hit=3146
+ Planning Time: 0.659 ms
+ Execution Time: 42.940 ms
+(19 rows)
+
+=== q03_customer_largest_transfers ===
+                                                                            QUERY PLAN                                                                             
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=278.20..278.23 rows=10 width=41) (actual time=0.310..0.311 rows=10.00 loops=1)
+   Buffers: shared hit=179
+   ->  Sort  (cost=278.20..278.28 rows=32 width=41) (actual time=0.310..0.310 rows=10.00 loops=1)
+         Sort Key: t.amount DESC
+         Sort Method: top-N heapsort  Memory: 26kB
+         Buffers: shared hit=179
+         ->  Nested Loop  (cost=5.64..277.51 rows=32 width=41) (actual time=0.049..0.299 rows=29.00 loops=1)
+               Buffers: shared hit=179
+               ->  Nested Loop  (cost=5.22..260.53 rows=33 width=8) (actual time=0.042..0.162 rows=29.00 loops=1)
+                     Buffers: shared hit=63
+                     ->  Index Scan using idx_accounts_customer_id on accounts a  (cost=0.28..8.30 rows=1 width=8) (actual time=0.013..0.014 rows=1.00 loops=1)
+                           Index Cond: (customer_id = 1001)
+                           Index Searches: 1
+                           Buffers: shared hit=3
+                     ->  Bitmap Heap Scan on ledger_entries l  (cost=4.94..251.90 rows=33 width=16) (actual time=0.027..0.145 rows=29.00 loops=1)
+                           Recheck Cond: (a.account_id = account_id)
+                           Filter: ((direction)::text = 'DEBIT'::text)
+                           Rows Removed by Filter: 28
+                           Heap Blocks: exact=57
+                           Buffers: shared hit=60
+                           ->  Bitmap Index Scan on idx_ledger_entries_account_id  (cost=0.00..4.93 rows=68 width=0) (actual time=0.007..0.007 rows=57.00 loops=1)
+                                 Index Cond: (account_id = a.account_id)
+                                 Index Searches: 1
+                                 Buffers: shared hit=3
+               ->  Index Scan using transactions_pkey on transactions t  (cost=0.42..0.51 rows=1 width=41) (actual time=0.005..0.005 rows=1.00 loops=29)
+                     Index Cond: (transaction_id = l.transaction_id)
+                     Filter: ((txn_type)::text = 'TRANSFER'::text)
+                     Index Searches: 29
+                     Buffers: shared hit=116
+ Planning:
+   Buffers: shared hit=30
+ Planning Time: 0.354 ms
+ Execution Time: 0.329 ms
+(33 rows)
+
+=== q04_large_transfer_fraud ===
+                                                                           QUERY PLAN                                                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=10581.14..10581.17 rows=10 width=48) (actual time=28.098..28.923 rows=10.00 loops=1)
+   Buffers: shared hit=4539
+   ->  Sort  (cost=10581.14..10593.65 rows=5001 width=48) (actual time=28.097..28.922 rows=10.00 loops=1)
+         Sort Key: (count(*)) DESC, (sum(l.amount)) DESC
+         Sort Method: top-N heapsort  Memory: 26kB
+         Buffers: shared hit=4539
+         ->  HashAggregate  (cost=10410.56..10473.07 rows=5001 width=48) (actual time=26.858..28.590 rows=4177.00 loops=1)
+               Group Key: a.customer_id
+               Batches: 1  Memory Usage: 1681kB
+               Buffers: shared hit=4539
+               ->  Gather  (cost=1259.02..10327.99 rows=11009 width=14) (actual time=3.323..23.852 rows=9842.00 loops=1)
+                     Workers Planned: 2
+                     Workers Launched: 2
+                     Buffers: shared hit=4539
+                     ->  Hash Join  (cost=259.02..8227.09 rows=4587 width=14) (actual time=1.750..23.092 rows=3280.67 loops=3)
+                           Hash Cond: (l.account_id = a.account_id)
+                           Buffers: shared hit=4539
+                           ->  Parallel Seq Scan on ledger_entries l  (cost=0.00..7956.02 rows=4587 width=14) (actual time=0.661..20.958 rows=3280.67 loops=3)
+                                 Filter: ((amount >= '4000'::numeric) AND ((direction)::text = 'DEBIT'::text) AND (created_at >= (now() - '90 days'::interval)))
+                                 Rows Removed by Filter: 131440
+                                 Buffers: shared hit=4167
+                           ->  Hash  (cost=184.01..184.01 rows=6001 width=16) (actual time=1.069..1.069 rows=6001.00 loops=3)
+                                 Buckets: 8192  Batches: 1  Memory Usage: 346kB
+                                 Buffers: shared hit=372
+                                 ->  Seq Scan on accounts a  (cost=0.00..184.01 rows=6001 width=16) (actual time=0.197..0.584 rows=6001.00 loops=3)
+                                       Buffers: shared hit=372
+ Planning:
+   Buffers: shared hit=14
+ Planning Time: 0.100 ms
+ Execution Time: 28.978 ms
+(30 rows)
+
+=== q05_idempotency_lookup ===
+                                                                    QUERY PLAN                                                                     
+---------------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using transactions_idempotency_key_key on transactions  (cost=0.42..8.44 rows=1 width=90) (actual time=0.019..0.020 rows=1.00 loops=1)
+   Index Cond: ((idempotency_key)::text = 'seed-xfer-12345'::text)
+   Index Searches: 1
+   Buffers: shared hit=4
+ Planning Time: 0.045 ms
+ Execution Time: 0.026 ms
+(6 rows)
+
+=== q06_balance_reconciliation ===
+                                                                                     QUERY PLAN                                                                                     
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Merge Join  (cost=6.94..43828.68 rows=5953 width=59) (actual time=283.892..283.893 rows=0.00 loops=1)
+   Merge Cond: (ledger_entries.account_id = a.account_id)
+   Join Filter: (a.balance <> ledger_entries.balance_after)
+   Rows Removed by Join Filter: 6001
+   Buffers: shared hit=395709
+   ->  Unique  (cost=6.66..43292.65 rows=5954 width=32) (actual time=2.246..281.970 rows=6001.00 loops=1)
+         Buffers: shared hit=395612
+         ->  Incremental Sort  (cost=6.66..42282.24 rows=404162 width=32) (actual time=2.245..269.465 rows=404162.00 loops=1)
+               Sort Key: ledger_entries.account_id, ledger_entries.created_at DESC, ledger_entries.entry_id DESC
+               Presorted Key: ledger_entries.account_id
+               Full-sort Groups: 5951  Sort Method: quicksort  Average Memory: 28kB  Peak Memory: 28kB
+               Pre-sorted Groups: 3657  Sort Method: quicksort  Average Memory: 474kB  Peak Memory: 474kB
+               Buffers: shared hit=395612
+               ->  Index Scan using idx_ledger_entries_account_id on ledger_entries  (cost=0.42..24814.65 rows=404162 width=32) (actual time=0.016..154.189 rows=404162.00 loops=1)
+                     Index Searches: 1
+                     Buffers: shared hit=395612
+   ->  Index Scan using accounts_pkey on accounts a  (cost=0.28..357.30 rows=6001 width=27) (actual time=0.014..0.712 rows=6001.00 loops=1)
+         Index Searches: 1
+         Buffers: shared hit=97
+ Planning Time: 0.086 ms
+ Execution Time: 283.937 ms
+(21 rows)
+
+=== q07_unbalanced_journals ===
+                                                                                                             QUERY PLAN                                                                                                             
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=0.84..48229.94 rows=201024 width=94) (actual time=209.901..209.902 rows=0.00 loops=1)
+   Group Key: t.transaction_id
+   Filter: ((count(l.entry_id) = 0) OR (COALESCE(sum(l.amount) FILTER (WHERE ((l.direction)::text = 'DEBIT'::text)), '0'::numeric) <> COALESCE(sum(l.amount) FILTER (WHERE ((l.direction)::text = 'CREDIT'::text)), '0'::numeric)))
+   Rows Removed by Filter: 202081
+   Buffers: shared hit=12095
+   ->  Merge Left Join  (cost=0.84..38246.57 rows=396186 width=42) (actual time=0.014..102.568 rows=404162.00 loops=1)
+         Merge Cond: (t.transaction_id = l.transaction_id)
+         Buffers: shared hit=12095
+         ->  Index Scan using transactions_pkey on transactions t  (cost=0.42..9030.53 rows=202029 width=22) (actual time=0.009..26.844 rows=202081.00 loops=1)
+               Filter: ((status)::text = ANY ('{COMPLETED,REVERSED}'::text[]))
+               Rows Removed by Filter: 4015
+               Index Searches: 1
+               Buffers: shared hit=3827
+         ->  Index Scan using ledger_entries_transaction_id_account_id_direction_key on ledger_entries l  (cost=0.42..23740.73 rows=404162 width=28) (actual time=0.003..29.433 rows=404162.00 loops=1)
+               Index Searches: 1
+               Buffers: shared hit=8268
+ Planning:
+   Buffers: shared hit=16
+ Planning Time: 0.333 ms
+ Execution Time: 209.921 ms
+(20 rows)
+
+=== q08_net_movement_reversals ===
+                                                                   QUERY PLAN                                                                    
+-------------------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=6358.30..6358.31 rows=1 width=88) (actual time=15.608..16.908 rows=1.00 loops=1)
+   Buffers: shared hit=3146
+   ->  Gather  (cost=6358.05..6358.26 rows=2 width=88) (actual time=15.542..16.901 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=3146
+         ->  Partial Aggregate  (cost=5358.05..5358.06 rows=1 width=88) (actual time=12.912..12.913 rows=1.00 loops=3)
+               Buffers: shared hit=3146
+               ->  Parallel Seq Scan on transactions  (cost=0.00..4863.47 rows=19783 width=15) (actual time=0.301..10.817 rows=16305.33 loops=3)
+                     Filter: (((txn_type)::text = 'TRANSFER'::text) AND (initiated_at >= (now() - '90 days'::interval)))
+                     Rows Removed by Filter: 52393
+                     Buffers: shared hit=3146
+ Planning Time: 0.069 ms
+ Execution Time: 16.926 ms
+(14 rows)
+
