@@ -56,7 +56,7 @@
 === q02_daily_transfer_totals ===
           day           | transfers | total_amount 
 ------------------------+-----------+--------------
- 2026-09-22 00:00:00+01 |       126 |  320819.9800
+ 2026-09-22 00:00:00+01 |       101 |  253199.3400
  2026-09-23 00:00:00+01 |       562 | 1373090.1900
  2026-09-24 00:00:00+01 |       587 | 1497494.4500
  2026-09-25 00:00:00+01 |       553 | 1425436.3200
@@ -136,12 +136,45 @@
 === q08_net_movement_reversals ===
  net_transfers |   net_amount   | reversed_transfers | reversed_amount | failed_transfers 
 ---------------+----------------+--------------------+-----------------+------------------
-         47901 | 122390739.5900 |                 26 |      70832.0500 |              985
+         47875 | 122331912.8600 |                 26 |      70832.0500 |              984
 (1 row)
 
 === q09_join_fanout_trap ===
  fan_out_total | correct_total 
 ---------------+---------------
- 78872596.7200 | 39436298.3600
+ 78737355.4400 | 39368677.7200
 (1 row)
+
+=== q10_kyc_verification_analysis ===
+ verification_status | total_customers | total_kyc_records 
+---------------------+-----------------+-------------------
+ VERIFIED            |            4800 |              4800
+ PENDING             |             200 |               200
+ REJECTED            |             100 |               100
+(3 rows)
+
+=== q11_customer_transaction_activity ===
+ customer_id | first_name | last_name | completed_transactions | total_transaction_amount 
+-------------+------------+-----------+------------------------+--------------------------
+        1350 | Ngozi      | Okonkwo   |                     20 |               62006.1800
+        4395 | Halima     | Okonkwo   |                     20 |               61569.6200
+        4325 | Bola       | Chukwu    |                     20 |               48174.9700
+        4815 | Halima     | Okonkwo   |                     19 |               51602.9800
+        4940 | Obinna     | Chukwu    |                     19 |               50829.7100
+         390 | Ngozi      | Okonkwo   |                     19 |               50816.0300
+        2255 | Halima     | Chukwu    |                     19 |               50624.8900
+        1710 | Ngozi      | Okonkwo   |                     19 |               49535.9500
+         580 | Obinna     | Danjuma   |                     19 |               42796.5100
+        1040 | Obinna     | Chukwu    |                     19 |               40835.2500
+         265 | Bola       | Danjuma   |                     18 |               51239.4900
+        3780 | Obinna     | Okonkwo   |                     18 |               42294.3800
+         625 | Bola       | Danjuma   |                     17 |               60515.4500
+        1390 | Ngozi      | Danjuma   |                     17 |               57458.3100
+        3260 | Obinna     | Chukwu    |                     17 |               50671.4300
+        3995 | Halima     | Chukwu    |                     17 |               49499.7300
+         630 | Ngozi      | Okonkwo   |                     17 |               46652.3200
+         225 | Bola       | Okonkwo   |                     17 |               45923.3200
+        1810 | Ngozi      | Danjuma   |                     17 |               45847.7000
+        2585 | Bola       | Chukwu    |                     17 |               43991.5200
+(20 rows)
 

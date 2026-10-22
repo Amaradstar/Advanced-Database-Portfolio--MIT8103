@@ -16,4 +16,8 @@
 \i portfolio-2-query-optimisation/queries/q08_net_movement_reversals.sql
 \qecho '=== q09_join_fanout_trap ==='
 \i portfolio-2-query-optimisation/queries/q09_join_fanout_trap.sql
+\qecho '=== q10_kyc_verification_analysis ==='
+\i portfolio-2-query-optimisation/queries/q10_kyc_verification_analysis.sql
+\qecho '=== q11_customer_transaction_activity ==='
+\i portfolio-2-query-optimisation/queries/q11_customer_transaction_activity.sql
 
