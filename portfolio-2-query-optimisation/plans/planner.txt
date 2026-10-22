@@ -1,0 +1,266 @@
+                                                      version                                                      
+-------------------------------------------------------------------------------------------------------------------
+ PostgreSQL 18.6 on aarch64-apple-darwin24.6.0, compiled by Apple clang version 17.0.0 (clang-1700.0.13.5), 64-bit
+(1 row)
+
+ block_size 
+------------
+ 8192
+(1 row)
+
+ shared_buffers 
+----------------
+ 128MB
+(1 row)
+
+ work_mem 
+----------
+ 4MB
+(1 row)
+
+ seq_page_cost 
+---------------
+ 1
+(1 row)
+
+ random_page_cost 
+------------------
+ 4
+(1 row)
+
+ cpu_tuple_cost 
+----------------
+ 0.01
+(1 row)
+
+                        relname                         | relkind | estimated_pages | estimated_rows | relation_size 
+--------------------------------------------------------+---------+-----------------+----------------+---------------
+ ledger_entries                                         | r       |            4167 |         404162 | 33 MB
+ transactions                                           | r       |            3146 |         206096 | 25 MB
+ ledger_entries_transaction_id_account_id_direction_key | i       |            2010 |         404162 | 16 MB
+ idx_txn_type_time_cover                                | i       |            1917 |         206096 | 15 MB
+ idx_ledger_account_created                             | i       |            1559 |         404162 | 12 MB
+ transactions_idempotency_key_key                       | i       |            1552 |         206096 | 12 MB
+ ledger_entries_pkey                                    | i       |            1111 |         404162 | 8888 kB
+ idx_txn_completed_transfers_time                       | i       |             756 |         195462 | 6048 kB
+ transactions_pkey                                      | i       |             567 |         206096 | 4536 kB
+ idx_ledger_entries_account_id                          | i       |             528 |         404162 | 4224 kB
+ idx_ledger_large_debits                                | i       |             280 |          45590 | 2240 kB
+ beneficiaries                                          | r       |             153 |          15000 | 1224 kB
+ accounts                                               | r       |             124 |           6001 | 992 kB
+ beneficiaries_customer_id_bank_name_account_number_key | i       |             115 |          15000 | 920 kB
+ customers                                              | r       |              71 |           5001 | 568 kB
+(15 rows)
+
+   tablename    |   attname    | n_distinct  |       most_common_vals       | correlation 
+----------------+--------------+-------------+------------------------------+-------------
+ ledger_entries | account_id   |        5945 | {1,4719,1740,1928,4592,5891} | 0.043920778
+ ledger_entries | amount       | -0.31162256 | {1000000.0000}               | -0.08881232
+ ledger_entries | created_at   | -0.50220454 |                              |  0.09339271
+ ledger_entries | direction    |           2 | {CREDIT,DEBIT}               |   0.5061139
+ transactions   | initiated_at |          -1 |                              |  0.08463784
+ transactions   | status       |           3 | {COMPLETED,FAILED,REVERSED}  |   0.9615452
+ transactions   | txn_type     |           3 | {TRANSFER,DEPOSIT,REVERSAL}  |   0.9968024
+(7 rows)
+
+                                                                                    QUERY PLAN                                                                                    
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=10069.82..10679.34 rows=50 width=44) (actual time=86.036..86.573 rows=50.00 loops=1)
+   Buffers: shared hit=4795
+   InitPlan 1
+     ->  Limit  (cost=10056.63..10056.64 rows=1 width=16) (actual time=85.887..85.907 rows=1.00 loops=1)
+           Buffers: shared hit=4539
+           ->  Sort  (cost=10056.63..10071.64 rows=6001 width=16) (actual time=85.887..85.906 rows=1.00 loops=1)
+                 Sort Key: (count(le.entry_id)) DESC, a.account_id
+                 Sort Method: top-N heapsort  Memory: 25kB
+                 Buffers: shared hit=4539
+                 ->  Finalize HashAggregate  (cost=9966.62..10026.63 rows=6001 width=16) (actual time=85.246..85.598 rows=6001.00 loops=1)
+                       Group Key: a.account_id
+                       Batches: 1  Memory Usage: 409kB
+                       Buffers: shared hit=4539
+                       ->  Gather  (cost=8394.40..9894.61 rows=14402 width=16) (actual time=81.909..83.047 rows=17903.00 loops=1)
+                             Workers Planned: 2
+                             Workers Launched: 2
+                             Buffers: shared hit=4539
+                             ->  Partial HashAggregate  (cost=7394.40..7454.41 rows=6001 width=16) (actual time=70.750..71.119 rows=5967.67 loops=3)
+                                   Group Key: a.account_id
+                                   Batches: 1  Memory Usage: 409kB
+                                   Buffers: shared hit=4539
+                                   Worker 0:  Batches: 1  Memory Usage: 409kB
+                                   Worker 1:  Batches: 1  Memory Usage: 409kB
+                                   ->  Hash Join  (cost=259.02..6552.39 rows=168401 width=16) (actual time=5.132..46.791 rows=134720.67 loops=3)
+                                         Hash Cond: (le.account_id = a.account_id)
+                                         Buffers: shared hit=4539
+                                         ->  Parallel Seq Scan on ledger_entries le  (cost=0.00..5851.01 rows=168401 width=16) (actual time=0.012..17.001 rows=134720.67 loops=3)
+                                               Buffers: shared hit=4167
+                                         ->  Hash  (cost=184.01..184.01 rows=6001 width=8) (actual time=5.097..5.099 rows=6001.00 loops=3)
+                                               Buckets: 8192  Batches: 1  Memory Usage: 299kB
+                                               Buffers: shared hit=372
+                                               ->  Seq Scan on accounts a  (cost=0.00..184.01 rows=6001 width=8) (actual time=2.867..4.184 rows=6001.00 loops=3)
+                                                     Buffers: shared hit=372
+   ->  Incremental Sort  (cost=13.18..842.13 rows=68 width=44) (actual time=86.035..86.550 rows=50.00 loops=1)
+         Sort Key: l.created_at DESC, l.entry_id DESC
+         Presorted Key: l.created_at
+         Full-sort Groups: 2  Sort Method: quicksort  Average Memory: 27kB  Peak Memory: 27kB
+         Buffers: shared hit=4795
+         ->  Nested Loop  (cost=0.84..839.07 rows=68 width=44) (actual time=85.937..86.536 rows=51.00 loops=1)
+               Buffers: shared hit=4795
+               ->  Index Scan using idx_ledger_account_created on ledger_entries l  (cost=0.42..277.32 rows=68 width=44) (actual time=85.912..85.956 rows=51.00 loops=1)
+                     Index Cond: (account_id = (InitPlan 1).col1)
+                     Index Searches: 1
+                     Buffers: shared hit=4591
+               ->  Index Scan using transactions_pkey on transactions t  (cost=0.42..8.26 rows=1 width=16) (actual time=0.011..0.011 rows=1.00 loops=51)
+                     Index Cond: (transaction_id = l.transaction_id)
+                     Index Searches: 51
+                     Buffers: shared hit=204
+ Planning:
+   Buffers: shared hit=100 read=6 dirtied=2
+ Planning Time: 9.383 ms
+ Execution Time: 87.459 ms
+(52 rows)
+
+SET
+SET
+SET
+                                                                                   QUERY PLAN                                                                                    
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=21656.57..21662.40 rows=50 width=44) (actual time=65.775..67.670 rows=50.00 loops=1)
+   Buffers: shared hit=11882
+   InitPlan 1
+     ->  Limit  (cost=10056.63..10056.64 rows=1 width=16) (actual time=38.924..38.997 rows=1.00 loops=1)
+           Buffers: shared hit=4539
+           ->  Sort  (cost=10056.63..10071.64 rows=6001 width=16) (actual time=38.924..38.996 rows=1.00 loops=1)
+                 Sort Key: (count(le.entry_id)) DESC, a.account_id
+                 Sort Method: top-N heapsort  Memory: 25kB
+                 Buffers: shared hit=4539
+                 ->  Finalize HashAggregate  (cost=9966.62..10026.63 rows=6001 width=16) (actual time=38.330..38.712 rows=6001.00 loops=1)
+                       Group Key: a.account_id
+                       Batches: 1  Memory Usage: 409kB
+                       Buffers: shared hit=4539
+                       ->  Gather  (cost=8394.40..9894.61 rows=14402 width=16) (actual time=35.455..36.492 rows=17903.00 loops=1)
+                             Workers Planned: 2
+                             Workers Launched: 2
+                             Buffers: shared hit=4539
+                             ->  Partial HashAggregate  (cost=7394.40..7454.41 rows=6001 width=16) (actual time=33.696..34.022 rows=5967.67 loops=3)
+                                   Group Key: a.account_id
+                                   Batches: 1  Memory Usage: 409kB
+                                   Buffers: shared hit=4539
+                                   Worker 0:  Batches: 1  Memory Usage: 409kB
+                                   Worker 1:  Batches: 1  Memory Usage: 409kB
+                                   ->  Hash Join  (cost=259.02..6552.39 rows=168401 width=16) (actual time=0.835..20.062 rows=134720.67 loops=3)
+                                         Hash Cond: (le.account_id = a.account_id)
+                                         Buffers: shared hit=4539
+                                         ->  Parallel Seq Scan on ledger_entries le  (cost=0.00..5851.01 rows=168401 width=16) (actual time=0.025..5.228 rows=134720.67 loops=3)
+                                               Buffers: shared hit=4167
+                                         ->  Hash  (cost=184.01..184.01 rows=6001 width=8) (actual time=0.801..0.802 rows=6001.00 loops=3)
+                                               Buckets: 8192  Batches: 1  Memory Usage: 299kB
+                                               Buffers: shared hit=372
+                                               ->  Seq Scan on accounts a  (cost=0.00..184.01 rows=6001 width=8) (actual time=0.090..0.406 rows=6001.00 loops=3)
+                                                     Buffers: shared hit=372
+   ->  Gather Merge  (cost=11599.93..11607.74 rows=67 width=44) (actual time=65.774..67.595 rows=50.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=11882
+         ->  Sort  (cost=10599.91..10599.98 rows=28 width=44) (actual time=24.849..24.853 rows=40.67 loops=3)
+               Sort Key: l.created_at DESC, l.entry_id DESC
+               Sort Method: top-N heapsort  Memory: 30kB
+               Buffers: shared hit=7343
+               Worker 0:  Sort Method: top-N heapsort  Memory: 31kB
+               Worker 1:  Sort Method: top-N heapsort  Memory: 31kB
+               ->  Parallel Hash Join  (cost=6272.36..10599.24 rows=28 width=44) (actual time=6.317..24.652 rows=2000.00 loops=3)
+                     Hash Cond: (t.transaction_id = l.transaction_id)
+                     Buffers: shared hit=7313
+                     ->  Parallel Seq Scan on transactions t  (cost=0.00..4004.73 rows=85873 width=16) (actual time=0.009..13.567 rows=68698.67 loops=3)
+                           Buffers: shared hit=3146
+                     ->  Parallel Hash  (cost=6272.01..6272.01 rows=28 width=44) (actual time=6.268..6.270 rows=2000.00 loops=3)
+                           Buckets: 8192 (originally 1024)  Batches: 1 (originally 1)  Memory Usage: 600kB
+                           Buffers: shared hit=4167
+                           ->  Parallel Seq Scan on ledger_entries l  (cost=0.00..6272.01 rows=28 width=44) (actual time=3.666..6.056 rows=2000.00 loops=3)
+                                 Filter: (account_id = (InitPlan 1).col1)
+                                 Rows Removed by Filter: 132721
+                                 Buffers: shared hit=4167
+ Planning:
+   Buffers: shared hit=30
+ Planning Time: 0.237 ms
+ Execution Time: 67.735 ms
+(59 rows)
+
+RESET
+RESET
+RESET
+                                                                                  QUERY PLAN                                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=1732.07..2088.62 rows=14262 width=44) (actual time=8.508..9.892 rows=29.00 loops=1)
+   Group Key: ((initiated_at)::date)
+   Buffers: shared hit=300 read=62
+   ->  Sort  (cost=1732.07..1767.73 rows=14262 width=10) (actual time=8.491..8.818 rows=15365.00 loops=1)
+         Sort Key: ((initiated_at)::date)
+         Sort Method: quicksort  Memory: 865kB
+         Buffers: shared hit=300 read=62
+         ->  Index Only Scan using idx_txn_completed_transfers_time on transactions  (cost=0.42..748.00 rows=14262 width=10) (actual time=0.488..7.750 rows=15365.00 loops=1)
+               Index Cond: (initiated_at >= (CURRENT_TIMESTAMP - '30 days'::interval))
+               Heap Fetches: 302
+               Index Searches: 1
+               Buffers: shared hit=300 read=62
+ Planning:
+   Buffers: shared hit=15
+ Planning Time: 0.440 ms
+ Execution Time: 9.908 ms
+(16 rows)
+
+SET
+SET
+SET
+                                                                                  QUERY PLAN                                                                                  
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=6465.50..8447.43 rows=14262 width=44) (actual time=13.625..16.845 rows=29.00 loops=1)
+   Group Key: ((initiated_at)::date)
+   Buffers: shared hit=3222
+   ->  Gather Merge  (cost=6465.50..8126.54 rows=14262 width=10) (actual time=13.607..15.675 rows=15365.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=3222
+         ->  Sort  (cost=5465.47..5480.33 rows=5942 width=10) (actual time=11.953..12.120 rows=5121.67 loops=3)
+               Sort Key: ((initiated_at)::date)
+               Sort Method: quicksort  Memory: 372kB
+               Buffers: shared hit=3222
+               Worker 0:  Sort Method: quicksort  Memory: 341kB
+               Worker 1:  Sort Method: quicksort  Memory: 345kB
+               ->  Parallel Seq Scan on transactions  (cost=0.00..5093.00 rows=5942 width=10) (actual time=0.139..11.536 rows=5121.67 loops=3)
+                     Filter: (((txn_type)::text = 'TRANSFER'::text) AND ((status)::text = 'COMPLETED'::text) AND (initiated_at >= (CURRENT_TIMESTAMP - '30 days'::interval)))
+                     Rows Removed by Filter: 63577
+                     Buffers: shared hit=3146
+ Planning Time: 0.055 ms
+ Execution Time: 16.865 ms
+(19 rows)
+
+RESET
+RESET
+RESET
+BEGIN
+CREATE INDEX
+ANALYZE
+                                                              QUERY PLAN                                                               
+---------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using tmp_customers_status on customers  (cost=0.28..14.63 rows=50 width=80) (actual time=0.014..0.027 rows=50.00 loops=1)
+   Index Cond: ((status)::text = 'SUSPENDED'::text)
+   Index Searches: 1
+   Buffers: shared hit=50 read=2
+ Planning:
+   Buffers: shared hit=29 read=1
+ Planning Time: 0.064 ms
+ Execution Time: 0.035 ms
+(8 rows)
+
+                                                  QUERY PLAN                                                   
+---------------------------------------------------------------------------------------------------------------
+ Seq Scan on customers  (cost=0.00..133.51 rows=4951 width=80) (actual time=0.003..0.325 rows=4951.00 loops=1)
+   Filter: ((status)::text = 'ACTIVE'::text)
+   Rows Removed by Filter: 50
+   Buffers: shared hit=71
+ Planning Time: 0.012 ms
+ Execution Time: 0.427 ms
+(6 rows)
+
+ROLLBACK
+ANALYZE
