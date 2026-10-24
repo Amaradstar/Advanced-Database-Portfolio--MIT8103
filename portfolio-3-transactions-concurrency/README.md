@@ -65,15 +65,15 @@ The screenshots below record the pgAdmin setup and demonstration results.
 
 | Evidence | Screenshot |
 |---|---|
-| Demo accounts prepared | [`add_demo_setup.png`](screenshots/add_demo_setup.png) |
-| Safe transfer function created | [`create_transfer_function.png`](screenshots/create_transfer_function.png) |
-| Unordered function created for study | [`create_flawed_function.png`](screenshots/create_flawed_function.png) |
-| Functions verified | [`verify_both_functions_exists.png`](screenshots/verify_both_functions_exists.png) |
-| Function call example | [`function_test.png`](screenshots/function_test.png) |
-| COMMIT, balances before commit | [`commit_demo_pending.png`](screenshots/commit_demo_pending.png) |
-| COMMIT, balances after commit | [`commit_demo_committed.png`](screenshots/commit_demo_committed.png) |
-| ROLLBACK, temporary balance | [`rollback_demo_pending.png`](screenshots/rollback_demo_pending.png) |
-| ROLLBACK, balances restored | [`rollback_demo_rolled_back.png`](screenshots/rollback_demo_rolled_back.png) |
+| Demo accounts prepared | [`Chirim_Amarachukwu_301914084_add_demo_setup.png`](screenshots/Chirim_Amarachukwu_301914084_add_demo_setup.png) |
+| Safe transfer function created | [`Chirim_Amarachukwu_301914084_create_transfer_function.png`](screenshots/Chirim_Amarachukwu_301914084_create_transfer_function.png) |
+| Unordered function created for study | [`Chirim_Amarachukwu_301914084_create_flawed_function.png`](screenshots/Chirim_Amarachukwu_301914084_create_flawed_function.png) |
+| Functions verified | [`Chirim_Amarachukwu_301914084_verify_both_functions_exists.png`](screenshots/Chirim_Amarachukwu_301914084_verify_both_functions_exists.png) |
+| Function call example | [`Chirim_Amarachukwu_301914084_function_test.png`](screenshots/Chirim_Amarachukwu_301914084_function_test.png) |
+| COMMIT, balances before commit | [`Chirim_Amarachukwu_301914084_commit_demo_pending.png`](screenshots/Chirim_Amarachukwu_301914084_commit_demo_pending.png) |
+| COMMIT, balances after commit | [`Chirim_Amarachukwu_301914084_commit_demo_committed.png`](screenshots/Chirim_Amarachukwu_301914084_commit_demo_committed.png) |
+| ROLLBACK, temporary balance | [`Chirim_Amarachukwu_301914084_rollback_demo_pending.png`](screenshots/Chirim_Amarachukwu_301914084_rollback_demo_pending.png) |
+| ROLLBACK, balances restored | [`Chirim_Amarachukwu_301914084_rollback_demo_rolled_back.png`](screenshots/Chirim_Amarachukwu_301914084_rollback_demo_rolled_back.png) |
 | READ COMMITTED, first read | [`Chirim_Amarachukwu_301914084_read_committed_first_read.png`](screenshots/Chirim_Amarachukwu_301914084_read_committed_first_read.png) |
 | READ COMMITTED, second read | [`Chirim_Amarachukwu_301914084_read_committed_second_read.png`](screenshots/Chirim_Amarachukwu_301914084_read_committed_second_read.png) |
 | REPEATABLE READ, first read | [`Chirim_Amarachukwu_301914084_repeatable_read_first_read.png`](screenshots/Chirim_Amarachukwu_301914084_repeatable_read_first_read.png) |
