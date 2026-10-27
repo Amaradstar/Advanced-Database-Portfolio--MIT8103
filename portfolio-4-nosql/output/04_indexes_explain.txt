@@ -1,0 +1,61 @@
+############ BEFORE indexes ############
+Q1: latest 20 events for customer 1001
+  [before]
+    plan stages         : SORT > COLLSCAN
+    documents examined  : 100000
+    index keys examined : 0
+    documents returned  : 16
+    execution time (ms) : 225
+Q2: FRAUD_FLAG events in the last 7 days
+  [before]
+    plan stages         : COLLSCAN
+    documents examined  : 100000
+    index keys examined : 0
+    documents returned  : 363
+    execution time (ms) : 25
+Q3: KYC profile for customer 2500
+  [before]
+    plan stages         : COLLSCAN
+    documents examined  : 5000
+    index keys examined : 0
+    documents returned  : 1
+    execution time (ms) : 13
+
+############ Creating indexes ############
+idx_audit_customer_ts
+idx_audit_type_ts
+uq_kyc_customer
+
+############ AFTER indexes ############
+Q1: latest 20 events for customer 1001
+  [after]
+    plan stages         : LIMIT > FETCH > IXSCAN
+    documents examined  : 16
+    index keys examined : 16
+    documents returned  : 16
+    execution time (ms) : 5
+Q2: FRAUD_FLAG events in the last 7 days
+  [after]
+    plan stages         : FETCH > IXSCAN
+    documents examined  : 363
+    index keys examined : 363
+    documents returned  : 363
+    execution time (ms) : 2
+Q3: KYC profile for customer 2500
+  [after]
+    plan stages         : EXPRESS_IXSCAN
+    documents examined  : 1
+    index keys examined : 1
+    documents returned  : 1
+    execution time (ms) : 2
+
+############ Unique index in action ############
+PASS: duplicate customer_id rejected -> DuplicateKey (code 11000)
+
+############ TTL index on login_sessions ############
+Inserted 2 sessions: one recent and one older than one hour.
+The old session should disappear after the TTL monitor processes it.
+
+############ Index sizes ############
+audit_events: data=14.5 MB, indexes=3.3 MB
+kyc_profiles: data=1.2 MB, indexes=0.2 MB
