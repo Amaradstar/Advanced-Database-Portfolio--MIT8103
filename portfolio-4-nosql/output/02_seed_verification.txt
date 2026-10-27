@@ -1,0 +1,65 @@
+kyc_profiles inserted: 5000
+audit_events inserted so far: 5000
+audit_events inserted so far: 10000
+audit_events inserted so far: 15000
+audit_events inserted so far: 20000
+audit_events inserted so far: 25000
+audit_events inserted so far: 30000
+audit_events inserted so far: 35000
+audit_events inserted so far: 40000
+audit_events inserted so far: 45000
+audit_events inserted so far: 50000
+audit_events inserted so far: 55000
+audit_events inserted so far: 60000
+audit_events inserted so far: 65000
+audit_events inserted so far: 70000
+audit_events inserted so far: 75000
+audit_events inserted so far: 80000
+audit_events inserted so far: 85000
+audit_events inserted so far: 90000
+audit_events inserted so far: 95000
+audit_events inserted so far: 100000
+
+=== Verification ===
+kyc_profiles : 5000  (expected 5000)
+audit_events : 100000  (expected 100000)
+Events by type:
+  LOGIN_SUCCESS: 39817
+  TRANSFER_INITIATED: 30210
+  LOGIN_FAILED: 14923
+  PIN_CHANGED: 5036
+  FRAUD_FLAG: 5024
+  KYC_UPGRADED: 4990
+Sample KYC profile (tier 3):
+{
+  _id: ObjectId('6ae09d15d3d56466aa3cee5c'),
+  customer_id: 10,
+  tier: 3,
+  status: 'VERIFIED',
+  documents: [
+    {
+      type: 'BVN',
+      number: '96705627094',
+      verified_with: 'NIBSS'
+    },
+    {
+      type: 'NIN',
+      number: '55045011225',
+      verified_with: 'NIMC'
+    },
+    {
+      type: 'PASSPORT',
+      number: 'A96537298',
+      country: 'NG',
+      expiry: ISODate('2031-08-16T12:46:13.183Z')
+    },
+    {
+      type: 'UTILITY_BILL',
+      number: 'UB67521213',
+      provider: 'Eko Disco',
+      issued_on: ISODate('2026-08-24T12:46:13.183Z')
+    }
+  ],
+  created_at: ISODate('2025-03-21T12:46:13.183Z'),
+  risk_notes: 'Enhanced due diligence completed'
+}
