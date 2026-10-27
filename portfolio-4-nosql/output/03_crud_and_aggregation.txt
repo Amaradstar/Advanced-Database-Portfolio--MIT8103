@@ -1,0 +1,123 @@
+############ CRUD ############
+
+--- CREATE: onboard a test customer with a passport
+{
+  customer_id: 999999,
+  tier: 2,
+  status: 'PENDING',
+  documents: [
+    {
+      type: 'BVN',
+      number: '22212345678',
+      verified_with: 'NIBSS'
+    },
+    {
+      type: 'PASSPORT',
+      number: 'A12345678',
+      country: 'NG',
+      expiry: ISODate('2031-05-01T00:00:00.000Z')
+    }
+  ],
+  created_at: ISODate('2026-10-27T15:18:17.619Z')
+}
+
+--- READ: tier 3 customers who hold a PASSPORT
+count = 316
+
+--- READ: passports expiring within the next 365 days
+count = 21
+
+--- READ: last 3 audit events for customer 1001
+{
+  customer_id: 1001,
+  event_type: 'TRANSFER_INITIATED',
+  ts: ISODate('2026-10-27T02:57:28.493Z'),
+  details: {
+    reference: 'ref-4208528448',
+    amount: Decimal128('1558.40'),
+    channel: 'WEB'
+  }
+}
+{
+  customer_id: 1001,
+  event_type: 'LOGIN_SUCCESS',
+  ts: ISODate('2026-10-13T01:43:37.920Z'),
+  details: {
+    ip: '102.89.126.121',
+    device: 'Android',
+    city: 'Lagos'
+  }
+}
+{
+  customer_id: 1001,
+  event_type: 'LOGIN_SUCCESS',
+  ts: ISODate('2026-10-11T18:00:20.916Z'),
+  details: {
+    ip: '102.89.115.51',
+    device: 'Android',
+    city: 'Benin City'
+  }
+}
+
+--- UPDATE: verify customer, upgrade tier, and add a document
+status=VERIFIED, tier=3, documents=3
+
+--- UPDATE: record the change by inserting an audit event
+
+--- DELETE: remove the temporary test customer
+deleted profile = 1
+deleted test audit events = 1
+
+############ AGGREGATION ############
+
+--- Aggregation 1: events per type in the last 30 days
+  LOGIN_SUCCESS: 13389
+  TRANSFER_INITIATED: 9972
+  LOGIN_FAILED: 4884
+  KYC_UPGRADED: 1679
+  FRAUD_FLAG: 1657
+  PIN_CHANGED: 1614
+
+--- Aggregation 2: transfer amounts per day (latest 5 days)
+  2026-10-27  transfers=172  total=407320.30
+  2026-10-26  transfers=329  total=837227.71
+  2026-10-25  transfers=314  total=773462.65
+  2026-10-24  transfers=327  total=782625.06
+  2026-10-23  transfers=315  total=810388.00
+
+--- Aggregation 3: top 5 customers by failed logins with KYC tier
+{
+  failed_logins: 12,
+  customer_id: 4745,
+  tier: 1,
+  status: 'VERIFIED'
+}
+{
+  failed_logins: 11,
+  customer_id: 821,
+  tier: 2,
+  status: 'VERIFIED'
+}
+{
+  failed_logins: 11,
+  customer_id: 1486,
+  tier: 2,
+  status: 'VERIFIED'
+}
+{
+  failed_logins: 10,
+  customer_id: 2769,
+  tier: 1,
+  status: 'REJECTED'
+}
+{
+  failed_logins: 10,
+  customer_id: 3920,
+  tier: 1,
+  status: 'PENDING'
+}
+
+--- Aggregation 4: average documents per KYC tier
+  tier 1: customers=2741, avg documents=1
+  tier 2: customers=1660, avg documents=2
+  tier 3: customers=599, avg documents=4
