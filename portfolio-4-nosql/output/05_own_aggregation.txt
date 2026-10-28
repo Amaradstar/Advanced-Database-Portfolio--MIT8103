@@ -1,0 +1,26 @@
+Top 5 cities by successful logins in the last 30 days:
+{
+  successful_logins: 1965,
+  city: 'Lagos',
+  unique_customers: 1629
+}
+{
+  successful_logins: 1914,
+  city: 'Ibadan',
+  unique_customers: 1590
+}
+{
+  successful_logins: 1903,
+  city: 'Abuja',
+  unique_customers: 1592
+}
+{
+  successful_logins: 1885,
+  city: 'Port Harcourt',
+  unique_customers: 1588
+}
+{
+  successful_logins: 1879,
+  city: 'Benin City',
+  unique_customers: 1575
+}
