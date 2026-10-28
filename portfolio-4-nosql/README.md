@@ -77,7 +77,7 @@ The seed script clears and repopulates its portfolio collections. Run it only wh
 
 ## AI-use declaration
 
-I used AI assistance(claude and chatgpt) to help plan the portfolio, understand MongoDB concepts, troubleshoot commands, and draft parts of this README. I ran the database scripts and reviewed the outputs myself.
+I used AI assistance(Claude and ChatGPT) to help plan the portfolio, understand MongoDB concepts, troubleshoot commands, and draft parts of this README. I ran the database scripts and reviewed the outputs myself.
 
 ## Evidence
 
