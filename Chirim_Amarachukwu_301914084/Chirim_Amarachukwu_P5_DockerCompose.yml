@@ -1,0 +1,52 @@
+# Portfolio 5: CedarPay PostgreSQL primary and streaming read replica.
+# Coursework demo passwords only.
+services:
+  primary:
+    image: postgres:16
+    container_name: cedarpay-pg-primary
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cedarpay
+      POSTGRES_PASSWORD: cedarpay_pass
+      POSTGRES_DB: cedarpay_db
+      REPLICATION_PASSWORD: repl_pass
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - max_wal_senders=10
+      - -c
+      - max_replication_slots=10
+      - -c
+      - wal_keep_size=256MB
+    ports:
+      - "5433:5432"
+    volumes:
+      - primary_data:/var/lib/postgresql/data
+      - ./primary-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U cedarpay -d cedarpay_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  replica:
+    image: postgres:16
+    container_name: cedarpay-pg-replica
+    restart: unless-stopped
+    depends_on:
+      primary:
+        condition: service_healthy
+    environment:
+      REPLICATION_PASSWORD: repl_pass
+    entrypoint: ["bash", "/replica-entrypoint.sh"]
+    ports:
+      - "5434:5432"
+    volumes:
+      - replica_data:/var/lib/postgresql/data
+      - ./replica-entrypoint.sh:/replica-entrypoint.sh:ro
+
+volumes:
+  primary_data:
+  replica_data:

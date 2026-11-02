@@ -1,0 +1,43 @@
+<mxfile host="app.diagrams.net" modified="2026-11-02T22:00:00.000Z" agent="Antigravity" version="24.0.0" type="device">
+  <diagram id="cedarpay-erd" name="CedarPay ERD">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <!-- Customers Table -->
+        <mxCell id="c_cust" value="&lt;b&gt;customers&lt;/b&gt;&lt;hr/&gt;+ customer_id: bigint [PK]&lt;br/&gt;+ first_name: varchar(100)&lt;br/&gt;+ last_name: varchar(100)&lt;br/&gt;+ email: varchar(255) [UQ]&lt;br/&gt;+ phone: varchar(20) [UQ]&lt;br/&gt;+ customer_type: varchar(20)&lt;br/&gt;+ status: varchar(20)&lt;br/&gt;+ created_at: timestamptz" style="shape=swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#e1d5e7;strokeColor=#9673a6;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="200" height="170" as="geometry" />
+        </mxCell>
+        <!-- Accounts Table -->
+        <mxCell id="c_acc" value="&lt;b&gt;accounts&lt;/b&gt;&lt;hr/&gt;+ account_id: bigint [PK]&lt;br/&gt;+ customer_id: bigint [FK]&lt;br/&gt;+ account_number: char(10) [UQ]&lt;br/&gt;+ currency: char(3)&lt;br/&gt;+ balance: numeric(19,4)&lt;br/&gt;+ status: varchar(20)&lt;br/&gt;+ opened_at: timestamptz" style="shape=swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;" vertex="1" parent="1">
+          <mxGeometry x="320" y="40" width="220" height="160" as="geometry" />
+        </mxCell>
+        <!-- Transactions Table -->
+        <mxCell id="c_txn" value="&lt;b&gt;transactions&lt;/b&gt;&lt;hr/&gt;+ transaction_id: bigint [PK]&lt;br/&gt;+ idempotency_key: varchar(64) [UQ]&lt;br/&gt;+ txn_type: varchar(20)&lt;br/&gt;+ status: varchar(20)&lt;br/&gt;+ amount: numeric(19,4)&lt;br/&gt;+ reference: varchar(100)&lt;br/&gt;+ reversal_of: bigint [FK]&lt;br/&gt;+ initiated_at: timestamptz&lt;br/&gt;+ completed_at: timestamptz" style="shape=swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#d5e8d4;strokeColor=#82b366;align=left;" vertex="1" parent="1">
+          <mxGeometry x="620" y="40" width="230" height="190" as="geometry" />
+        </mxCell>
+        <!-- Ledger Entries Table -->
+        <mxCell id="c_ledger" value="&lt;b&gt;ledger_entries&lt;/b&gt;&lt;hr/&gt;+ entry_id: bigint [PK]&lt;br/&gt;+ transaction_id: bigint [FK]&lt;br/&gt;+ account_id: bigint [FK]&lt;br/&gt;+ direction: varchar(6)&lt;br/&gt;+ amount: numeric(19,4)&lt;br/&gt;+ balance_after: numeric(19,4)&lt;br/&gt;+ created_at: timestamptz" style="shape=swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#ffe6cc;strokeColor=#d79b00;align=left;" vertex="1" parent="1">
+          <mxGeometry x="470" y="320" width="220" height="160" as="geometry" />
+        </mxCell>
+        <!-- KYC Records Table -->
+        <mxCell id="c_kyc" value="&lt;b&gt;kyc_records&lt;/b&gt;&lt;hr/&gt;+ kyc_id: bigint [PK]&lt;br/&gt;+ customer_id: bigint [FK]&lt;br/&gt;+ id_type: varchar(30)&lt;br/&gt;+ id_number: varchar(50)&lt;br/&gt;+ verification_status: varchar(20)&lt;br/&gt;+ submitted_at: timestamptz&lt;br/&gt;+ decision_at: timestamptz" style="shape=swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#f8cecc;strokeColor=#b85450;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="210" height="160" as="geometry" />
+        </mxCell>
+        <!-- Beneficiaries Table -->
+        <mxCell id="c_bene" value="&lt;b&gt;beneficiaries&lt;/b&gt;&lt;hr/&gt;+ beneficiary_id: bigint [PK]&lt;br/&gt;+ customer_id: bigint [FK]&lt;br/&gt;+ bank_name: varchar(100)&lt;br/&gt;+ account_number: char(10)&lt;br/&gt;+ account_name: varchar(150)" style="shape=swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#fff2cc;strokeColor=#d6b656;align=left;" vertex="1" parent="1">
+          <mxGeometry x="40" y="480" width="220" height="130" as="geometry" />
+        </mxCell>
+        <!-- Cards Table -->
+        <mxCell id="c_card" value="&lt;b&gt;cards&lt;/b&gt;&lt;hr/&gt;+ card_id: bigint [PK]&lt;br/&gt;+ account_id: bigint [FK]&lt;br/&gt;+ last_four: char(4)&lt;br/&gt;+ card_type: varchar(20)&lt;br/&gt;+ expiry_date: date&lt;br/&gt;+ status: varchar(20)" style="shape=swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;" vertex="1" parent="1">
+          <mxGeometry x="270" y="480" width="180" height="140" as="geometry" />
+        </mxCell>
+        <!-- Fraud Flags Table -->
+        <mxCell id="c_fraud" value="&lt;b&gt;fraud_flags&lt;/b&gt;&lt;hr/&gt;+ flag_id: bigint [PK]&lt;br/&gt;+ transaction_id: bigint [FK]&lt;br/&gt;+ reason: varchar(200)&lt;br/&gt;+ risk_score: smallint&lt;br/&gt;+ status: varchar(20)&lt;br/&gt;+ flagged_at: timestamptz" style="shape=swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#f8cecc;strokeColor=#b85450;align=left;" vertex="1" parent="1">
+          <mxGeometry x="740" y="320" width="200" height="150" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+
