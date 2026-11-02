@@ -280,10 +280,8 @@ psql -U postgres -h localhost
 All execution milestones and interface validations are documented in [Screenshots/](Screenshots/):
 
 1. **Database Setup & Connectivity**:
-   - [Screenshot 2026-10-20 at 00.22.02.png](Screenshots/Screenshot%202026-10-20%20at%2000.22.02.png): Confirms the successful creation of and connection to `cedarpay_db` inside pgAdmin 4 running on PostgreSQL 18.
-2. **Initial Structure & Scope**:
-   - [Screenshot 2026-10-19 at 23.46.50.png](Screenshots/Screenshot%202026-10-19%20at%2023.46.50.png): Captures initial repository configuration and portfolio structure.
-3. *Additional screenshots capturing table creation in pgAdmin 4, test output notices, and row-count verifications after running `04_seed_data.sql` are stored in this directory.*
+   - [CedarPay database in pgAdmin](Screenshots/Chirim_Amarachukwu_301914084_DB.png): Shows CedarPay_db selected in pgAdmin connected to PostgreSQL 18.
+2. *Additional screenshots capturing table creation in pgAdmin 4, test output notices, and row-count verifications after running `04_seed_data.sql` are stored in this directory.*
 
 ---
 
