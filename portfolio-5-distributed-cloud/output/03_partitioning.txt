@@ -1,0 +1,56 @@
+=== Rebuilding the partitioned copy of ledger_entries
+DROP TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+INSERT 0 404164
+ANALYZE
+
+=== Rows per partition
+   partition    |  rows  
+----------------+--------
+ ledger_shard_0 | 103147
+ ledger_shard_1 | 100901
+ ledger_shard_2 | 102146
+ ledger_shard_3 |  97970
+(4 rows)
+
+
+=== Original and partitioned totals should match
+ original_rows | partitioned_rows 
+---------------+------------------
+        404164 |           404164
+(1 row)
+
+
+=== With account_id: partition pruning should scan one partition
+                              QUERY PLAN                               
+-----------------------------------------------------------------------
+ Limit
+   ->  Sort
+         Sort Key: ledger_entries_sharded.created_at DESC
+         ->  Bitmap Heap Scan on ledger_shard_0 ledger_entries_sharded
+               Recheck Cond: (account_id = 1001)
+               ->  Bitmap Index Scan on ledger_shard_0_pkey
+                     Index Cond: (account_id = 1001)
+(7 rows)
+
+
+=== Without account_id: all four partitions should be scanned
+                                QUERY PLAN                                
+--------------------------------------------------------------------------
+ Gather
+   Workers Planned: 2
+   ->  Parallel Append
+         ->  Parallel Seq Scan on ledger_shard_0 ledger_entries_sharded_1
+               Filter: (transaction_id = 12345)
+         ->  Parallel Seq Scan on ledger_shard_2 ledger_entries_sharded_3
+               Filter: (transaction_id = 12345)
+         ->  Parallel Seq Scan on ledger_shard_1 ledger_entries_sharded_2
+               Filter: (transaction_id = 12345)
+         ->  Parallel Seq Scan on ledger_shard_3 ledger_entries_sharded_4
+               Filter: (transaction_id = 12345)
+(11 rows)
+
